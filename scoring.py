@@ -18,7 +18,7 @@ def score_l2norm(task_vector, machine_vector, cpu_weight, memory_weight):
             + memory_weight * (task_vector[1] - machine_vector[1])**2)
 
 def assign_ffd(tasks, machines, fitness_fn, cpu_weight, memory_weight):
-    #Note - sequential bin-centric FFD
+    #Note - sequential bin-centric FFD. Explore simultanous assignmnet. Liner sum assignment, etc.
     remaining = list(sorted(tasks,
                             key=lambda t: np.linalg.norm(t.size),
                             reverse=True))   # FFD ordering
