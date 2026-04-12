@@ -139,6 +139,9 @@ celerybeat.pid
 .envrc
 .venv
 env/
+bin/
+lib64/
+lib64
 venv/
 ENV/
 env.bak/
