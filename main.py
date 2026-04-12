@@ -30,5 +30,7 @@ if __name__ == "__main__":
     task_df = pd.read_csv("cleaned_data.csv")
     task_df = task_df[task_df['instance_events_type'] == 'SUBMIT']
     task_df = task_df[(task_df['time'] > 0) & (task_df['time'] < 9223372036854775807)]
-    metrics_df = main(task_df, heuristic="dot_product", seed=42)
-    metrics_df.to_csv("metrics_log.csv", index=False)
+    dot_product_metrics_df = main(task_df, heuristic="dot_product", seed=42)
+    l2norm_metrics_df = main(task_df, heuristic="l2norm", seed=42)
+    dot_product_metrics_df.to_csv("dot_product_metrics_log.csv", index=False)
+    l2norm_metrics_df.to_csv("l2norm_metrics_log.csv", index=False)

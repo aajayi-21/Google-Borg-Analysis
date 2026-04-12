@@ -50,10 +50,10 @@ class Machine:
             return False
         
     def process_jobs(self, env, window): # TODO: Add a jobs finished callback to update metrics
-        window = window / 1000000
         yield env.timeout(window)
+        window_sec = window / 1000000
         for task in list(self.tasks):
-            task.remaining_time -= window
+            task.remaining_time -= window_sec
             if task.remaining_time <= 0:
                 task.remaining_time = 0
                 task.time_completed = env.now

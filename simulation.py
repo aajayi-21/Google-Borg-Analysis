@@ -8,7 +8,7 @@ from metrics import compute_metrics
 from typing import List, Callable
 from tqdm import tqdm
 
-WINDOW = 600_000_000.# 10 minutes in microseconds
+WINDOW = 300_000_000.# 5 minutes in microseconds
 
 
 def scheduler_process(env:         sp.Environment,
