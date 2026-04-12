@@ -3,6 +3,12 @@ from task import Task
 from machine import Machine
 import pandas as pd
 import numpy as np
+from scoring import assign_ffd, dimension_weight, score_dot_product, score_l2norm
+from metrics import compute_metrics
+from typing import List, Callable
+from tqdm import tqdm
+
+WINDOW = 600_000_000.# 10 minutes in microseconds
 
 
 def scheduler_process(env:         sp.Environment,
@@ -10,8 +16,7 @@ def scheduler_process(env:         sp.Environment,
                       machines:    List[Machine],
                       fitness_fn:  Callable,
                       metrics_log: list,
-                      rng:         np.random.Generator,
-                      heuristic:   str):
+                      ):
     """
     Core scheduling loop — one iteration per 5-minute epoch.
 
@@ -28,6 +33,11 @@ def scheduler_process(env:         sp.Environment,
     """
     window_id = 0
     trace_end = task_df["time"].max()
+    MAX_ITER = int(trace_end / WINDOW + 1)
+    iteration_count = 0 
+    progress_bar = tqdm(total=MAX_ITER, desc="Simulation Progress", unit="epoch")
+
+
 
     while env.now <= trace_end + WINDOW:
         t_start = env.now
@@ -37,8 +47,9 @@ def scheduler_process(env:         sp.Environment,
                     (task_df["time"] <  t_end))
         window_df = task_df.loc[mask] #New tasks
 
-        n_submitted = len(window_df)
-        n_assigned  = 0
+        assigned   = set()
+        remaining = set()
+
 
         if not window_df.empty:
             # ── Step 1-2: build Job objects and sample durations ───────────
@@ -48,28 +59,28 @@ def scheduler_process(env:         sp.Environment,
                     cluster = row["cluster"],
                     collection_id  = row["collection_id"],
                     instance_index = row["instance_index"],
-                    cpu            = row["cpu"],
-                    memory         = row["memory"],
+                    cpu            = row["requested_cpus"],
+                    memory         = row["requested_memory"],
                     submit_time    = env.now,
                     status         = 'SUBMIT'
                 )
                 new_tasks.append(t)
-
+            cpu_weight, mem_weight = dimension_weight(window_df)
             # ── Step 3: FFD assignment ─────────────────────────────────────
-            assignment = assign_ffd(new_tasks, machines, fitness_fn)
-            n_assigned = len(assignment)
-
+            assigned, remaining = assign_ffd(new_tasks, machines, fitness_fn, cpu_weight, mem_weight)
             # ── Step 4: spawn concurrent machine processes ─────────────────
             # Each job gets its own SimPy timeout; jobs on the same machine
             # all run in parallel — there is no internal machine queue.
 
-            for m in machines:  
-                m.process_jobs(env, WINDOW)
+        for m in machines:  
+            env.process(m.process_jobs(env, WINDOW))
 
         # ── Step 6: record metrics ─────────────────────────────────────────
-        rec = compute_metrics(machines, window_id, env.now,
-                              heuristic, n_submitted, n_assigned)
+        rec = compute_metrics(machines, window_id, env.now, assigned, remaining)
         metrics_log.append(rec)
 
         window_id += 1
-        yield env.timeout(WINDOW_SECS)
+        yield env.timeout(WINDOW)
+        iteration_count += 1
+        progress_bar.update(1)
+    progress_bar.close()

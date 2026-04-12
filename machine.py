@@ -27,6 +27,7 @@ class Machine:
     
     def assign_task(self, task):
         if self.fits(task):
+            task.status = "SCHEDULE"
             self.tasks.append(task)
             self.cpu_used += task.cpu
             self.memory_used += task.memory
@@ -38,6 +39,7 @@ class Machine:
         
     def release_task(self, task):
         if task in self.tasks:
+            task.status='FINISH'
             self.tasks.remove(task)
             self.cpu_used -= task.cpu
             self.memory_used -= task.memory
@@ -48,11 +50,12 @@ class Machine:
             return False
         
     def process_jobs(self, env, window):
+        window = window / 1000000
         yield env.timeout(window)
-        for task in self.tasks:
-            task.remining_time -= window
-            if task.remining_time <= 0:
-                task.remining_time = 0
+        for task in list(self.tasks):
+            task.remaining_time -= window
+            if task.remaining_time <= 0:
+                task.remaining_time = 0
                 task.time_completed = env.now
                 self.release_task(task)
 
