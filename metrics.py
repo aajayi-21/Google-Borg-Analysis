@@ -56,7 +56,8 @@ def compute_metrics(machines:    List[Machine],
                     window_id:   int,
                     sim_time:    float,
                     assigned: Set,
-                    remaining:  Set) -> Dict:
+                    remaining:  Set,
+                    queue: List) -> Dict:
     """
     Compute per-window system performance metrics.
 
@@ -127,4 +128,5 @@ def compute_metrics(machines:    List[Machine],
         "n_assigned":      len(assigned),
         "state_diversity":      _state_diversity(machines, n_bins=10),
         "state_diversity_norm": _state_diversity(machines, n_bins=10) / (len(machines) ** 2),
+        "queue_length":     len(queue)
     } 
