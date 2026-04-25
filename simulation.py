@@ -3,12 +3,12 @@ from task import Task
 from machine import Machine
 import pandas as pd
 import numpy as np
-from scoring import assign_ffd, dimension_weight, score_dot_product, score_l2norm
+from scoring import assign_ffd, score_dot_product, score_l2norm
 from metrics import compute_metrics
 from typing import List, Callable
 from tqdm import tqdm
 
-WINDOW = 300_000_000.# 5 minutes in microseconds
+WINDOW = 120_000_000.# 2 minutes in microseconds
 
 
 def scheduler_process(env:         sp.Environment,
@@ -16,9 +16,12 @@ def scheduler_process(env:         sp.Environment,
                       machines:    List[Machine],
                       fitness_fn:  Callable,
                       metrics_log: list,
+                      tasks_log: list,
+                      cpu_weight: float = 0.5,
+                      memory_weight: float = 0.5
                       ):
     """
-    Core scheduling loop — one iteration per 5-minute epoch.
+    Core scheduling loop — one iteration per 2-minute epoch.
 
     Each epoch
     ----------
@@ -53,24 +56,27 @@ def scheduler_process(env:         sp.Environment,
 
         if not window_df.empty:
             # ── Step 1-2: build Job objects and sample durations ───────────
-            #new_tasks = list(remaining) # Remaining tasks from previous window that weren't assigned TODO: Queue is only reduced when new jobs come
+            #new_tasks = list(remaining) # Remaining tasks from previous window that weren't assigned
             for _, row in window_df.iterrows():
                 for _ in range(copies):
                     t = Task(
                         cluster = row["cluster"],
                         collection_id  = row["collection_id"],
                         instance_index = row["instance_index"],
-                        cpu            = row["requested_cpus"] * 6,
-                        memory         = row["requested_memory"] * 6,
+                        cpu            = row["requested_cpus"] * 7,
+                        memory         = row["requested_memory"] * 7,
                         submit_time    = env.now,
                         status         = 'SUBMIT'
                     )
                     queue.append(t)
+                    tasks_log.append(t)
             #cpu_weight, mem_weight = dimension_weight(window_df)
             # ── Step 3: FFD assignment ─────────────────────────────────────
         if queue:
-            assigned, remaining = assign_ffd(queue, machines, fitness_fn, 0.5, 0.5)
-            queue = list(remaining) # Update queue with remaining tasks that weren't assigned
+            assigned, remaining = assign_ffd(queue, machines, fitness_fn, cpu_weight=cpu_weight, 
+                                             memory_weight=memory_weight)
+            queue = list(remaining) # Update queue with remaining tasks that weren't assigned #TODO: No precedence for jobs already in queue
+
         #assigned, remaining = assign_ffd(new_tasks, machines, fitness_fn, cpu_weight, mem_weight)
             # ── Step 4: spawn concurrent machine processes ─────────────────
             # Each job gets its own SimPy timeout; jobs on the same machine

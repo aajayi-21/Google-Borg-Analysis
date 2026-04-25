@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import List, Set, Dict
 from machine import Machine
+from task import Task
 
 def _gini(values: np.ndarray) -> float:
     """Gini coefficient — measures load (im)balance across machines."""
@@ -50,6 +51,23 @@ def _state_diversity(machines: List[Machine], n_bins: int = 10) -> float:
         counts[(i, j)] = counts.get((i, j), 0) + 1
 
     return float(sum(v ** 2 for v in counts.values()))
+
+def task_result_df(task_results: List) -> pd.DataFrame:
+    data = []
+    for task in task_results:
+        data.append({
+            "cluster": task.cluster,
+            "collection_id": task.collection_id,
+            "instance_index": task.instance_index,
+            "cpu": task.cpu,
+            "memory": task.memory,
+            "submit_time": task.submit_time,
+            "status": task.status,
+            "processing_time": task.processing_time,
+            "remaining_time": task.remaining_time,
+            "time_completed": task.time_completed
+        })
+    return pd.DataFrame(data)
 
 
 def compute_metrics(machines:    List[Machine],
@@ -124,7 +142,6 @@ def compute_metrics(machines:    List[Machine],
         "num_bins_used":   int(sum(1 for m in machines if len(m.tasks) > 0)),
         #"active_tasks":     len(all_active_tasks),
         #"avg_remaining":   float(np.mean(remaining_times)),
-        "n_submitted":     len(assigned) + len(remaining),
         "n_assigned":      len(assigned),
         "state_diversity":      _state_diversity(machines, n_bins=10),
         "state_diversity_norm": _state_diversity(machines, n_bins=10) / (len(machines) ** 2),

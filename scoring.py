@@ -1,13 +1,13 @@
 import numpy as np
 
-def dimension_weight(tasks):
-    mean_cpu = tasks["requested_cpus"].mean()
-    mean_memory = tasks["requested_memory"].mean()
+# def dimension_weight(tasks):
+#     mean_cpu = tasks["requested_cpus"].mean()
+#     mean_memory = tasks["requested_memory"].mean()
     
-    cpu_weight = np.exp(0.01 * mean_cpu)
-    memory_weight = np.exp(0.01 * mean_memory)
+#     cpu_weight = np.exp(0.01 * mean_cpu)
+#     memory_weight = np.exp(0.01 * mean_memory)
 
-    return cpu_weight, memory_weight
+#     return cpu_weight, memory_weight
 
 def score_dot_product(task_vector, machine_vector, cpu_weight, memory_weight):
     cpu_weight, memory_weight = 0.5, 0.5
