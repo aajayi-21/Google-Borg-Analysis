@@ -36,9 +36,17 @@ if __name__ == "__main__":
     task_df = pd.read_csv("cleaned_data.csv")
     task_df = task_df[task_df['instance_events_type'] == 'SUBMIT']
     task_df = task_df[(task_df['time'] > 0) & (task_df['time'] < 9223372036854775807)]
-    dot_product_metrics_df, dot_prodct_task_df = main(task_df, heuristic="dot_product", seed=42)
-    l2norm_metrics_df, l2norm_task_df = main(task_df, heuristic="l2norm", seed=42)
-    dot_product_metrics_df.to_csv("dot_product_metrics_log.csv", index=False)
-    l2norm_metrics_df.to_csv("l2norm_metrics_log.csv", index=False)
-    dot_prodct_task_df.to_csv("dot_product_tasks_log.csv", index=False)
-    l2norm_task_df.to_csv("l2norm_tasks_log.csv", index=False)
+    for i in np.linspace(0.0,1.0, num=11, endpoint=True):
+        print(f"Running simulation with cpu_weight={i:.2f} and memory_weight={1-i:.2f}")
+        cpu_weight = i
+        memory_weight = 1 - i
+        dot_product_metrics_df, dot_prodct_task_df = main(task_df, heuristic="dot_product", seed=42, 
+                                                          cpu_weight=cpu_weight, memory_weight=memory_weight)
+        l2norm_metrics_df, l2norm_task_df = main(task_df, heuristic="l2norm", seed=42, 
+                                                 cpu_weight=cpu_weight, memory_weight=memory_weight)
+        
+        dot_product_metrics_df.to_csv(f"./dot/dot_product_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        l2norm_metrics_df.to_csv(f"./l2norm/l2norm_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        dot_prodct_task_df.to_csv(f"./dot/dot_product_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        l2norm_task_df.to_csv(f"./l2norm/l2norm_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+    print("Simulations complete. Metrics and task logs saved to CSV files.")
