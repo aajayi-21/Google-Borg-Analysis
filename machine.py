@@ -49,7 +49,7 @@ class Machine:
         else:
             return False
         
-    def process_jobs(self, env, window): # TODO: Add a jobs finished callback to update metrics
+    def process_jobs(self, env, window):
         num_completed = 0
         yield env.timeout(window)
         window_sec = window / 1000000

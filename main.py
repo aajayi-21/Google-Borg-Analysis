@@ -10,7 +10,9 @@ from simulation import scheduler_process
 
 def main(task_df, heuristic="dot_product", seed = 42, cpu_weight=0.5, memory_weight=0.5):
 
-    M = 2
+    rng = np.random.default_rng(seed)
+
+    M = 10
     N = len(task_df)
     machines = []
     metrics_log = []
@@ -23,7 +25,7 @@ def main(task_df, heuristic="dot_product", seed = 42, cpu_weight=0.5, memory_wei
     env.process(scheduler_process(env, task_df, machines, 
                                   fitness_fn=score_dot_product if heuristic == "dot_product" else score_l2norm,
                                   metrics_log=metrics_log, tasks_log=tasks_log, cpu_weight=cpu_weight, 
-                                  memory_weight=memory_weight))
+                                  memory_weight=memory_weight, rng=rng))
     env.run()
     metrics_log_df = pd.DataFrame(metrics_log)
     tasks_log = task_result_df(tasks_log)
@@ -45,8 +47,8 @@ if __name__ == "__main__":
         l2norm_metrics_df, l2norm_task_df = main(task_df, heuristic="l2norm", seed=42, 
                                                  cpu_weight=cpu_weight, memory_weight=memory_weight)
         
-        dot_product_metrics_df.to_csv(f"./dot/dot_product_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
-        l2norm_metrics_df.to_csv(f"./l2norm/l2norm_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
-        dot_prodct_task_df.to_csv(f"./dot/dot_product_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
-        l2norm_task_df.to_csv(f"./l2norm/l2norm_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        dot_product_metrics_df.to_csv(f"./dot_10_85/dot_product_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        l2norm_metrics_df.to_csv(f"./l2norm_10_85/l2norm_metrics_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        dot_prodct_task_df.to_csv(f"./dot_10_85/dot_product_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
+        l2norm_task_df.to_csv(f"./l2norm_10_85/l2norm_tasks_log_{cpu_weight:.2f}_{memory_weight:.2f}.csv", index=False)
     print("Simulations complete. Metrics and task logs saved to CSV files.")

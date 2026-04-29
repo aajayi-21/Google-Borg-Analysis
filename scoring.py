@@ -10,12 +10,10 @@ import numpy as np
 #     return cpu_weight, memory_weight
 
 def score_dot_product(task_vector, machine_vector, cpu_weight, memory_weight):
-    cpu_weight, memory_weight = 0.5, 0.5
     return cpu_weight * task_vector[0] * machine_vector[0] + memory_weight * task_vector[1] * machine_vector[1]
 
 
 def score_l2norm(task_vector, machine_vector, cpu_weight, memory_weight):
-    cpu_weight, memory_weight = 0.5, 0.5
     return -(cpu_weight * (task_vector[0] - machine_vector[0])**2 
             + memory_weight * (task_vector[1] - machine_vector[1])**2)
 

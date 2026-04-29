@@ -12,14 +12,15 @@ WINDOW = 120_000_000.# 2 minutes in microseconds
 
 
 def scheduler_process(env:         sp.Environment,
-                      task_df:      pd.DataFrame,
-                      machines:    List[Machine],
-                      fitness_fn:  Callable,
-                      metrics_log: list,
-                      tasks_log: list,
-                      cpu_weight: float = 0.5,
-                      memory_weight: float = 0.5
-                      ):
+                    task_df:      pd.DataFrame,
+                    machines:    List[Machine],
+                    fitness_fn:  Callable,
+                    metrics_log: list,
+                    tasks_log: list,
+                    cpu_weight: float = 0.5,
+                    memory_weight: float = 0.5,
+                    rng = None
+                    ):
     """
     Core scheduling loop — one iteration per 2-minute epoch.
 
@@ -29,7 +30,7 @@ def scheduler_process(env:         sp.Environment,
     2. Build Job objects and sample processing durations.
     3. Run FFD assignment (dot-product or norm-based).
     4. Spawn a concurrent machine_process per assigned job
-       (all jobs on a machine execute simultaneously).
+    (all jobs on a machine execute simultaneously).
     5. Refresh remaining_time on every active job across all machines.
     6. Record window metrics.
     7. Advance the simulation clock by WINDOW_SECS.
@@ -63,10 +64,11 @@ def scheduler_process(env:         sp.Environment,
                         cluster = row["cluster"],
                         collection_id  = row["collection_id"],
                         instance_index = row["instance_index"],
-                        cpu            = row["requested_cpus"] * 7,
-                        memory         = row["requested_memory"] * 7,
+                        cpu            = row["requested_cpus"] * 8.5,
+                        memory         = row["requested_memory"] * 8.5,
                         submit_time    = env.now,
-                        status         = 'SUBMIT'
+                        status         = 'SUBMIT',
+                        rng = rng
                     )
                     queue.append(t)
                     tasks_log.append(t)
@@ -74,7 +76,7 @@ def scheduler_process(env:         sp.Environment,
             # ── Step 3: FFD assignment ─────────────────────────────────────
         if queue:
             assigned, remaining = assign_ffd(queue, machines, fitness_fn, cpu_weight=cpu_weight, 
-                                             memory_weight=memory_weight)
+                                            memory_weight=memory_weight)
             queue = list(remaining) # Update queue with remaining tasks that weren't assigned #TODO: No precedence for jobs already in queue
 
         #assigned, remaining = assign_ffd(new_tasks, machines, fitness_fn, cpu_weight, mem_weight)
