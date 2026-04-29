@@ -28,6 +28,7 @@ class Machine:
     def assign_task(self, task):
         if self.fits(task):
             task.status = "SCHEDULE"
+            task.machine = self
             self.tasks.append(task)
             self.cpu_used += task.cpu
             self.memory_used += task.memory

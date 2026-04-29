@@ -25,6 +25,7 @@ class Task:
                                                         STDDEV, LAM)
         self.remaining_time = self.processing_time
         self.time_completed = np.inf
+        self.machine = None
 
 
     def sample_processing_time(self, beta0, beta1, beta2, stddev, lam):
